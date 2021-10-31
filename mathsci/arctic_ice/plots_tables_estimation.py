@@ -346,7 +346,8 @@ def estimation_results(ice_extent_df,
                        month=None,
                        num_iter=_DEFAULT_NUM_ITER,
                        verbose=False,
-                       significance=0.05):
+                       significance=0.05,
+                       seed=None):
 
     fitter = BkptModelFitter(indep=indep,
                              dep=dep,
@@ -400,23 +401,21 @@ def estimation_results(ice_extent_df,
     graph = True
     resample_cases = False
 
-    preserve_cond_var = False
-
     add_percentile_ci = True
     add_basic_ci = False
 
-    bca_ci_df = bootstrap.boot_conf_intervals(indep=indep,
-                                              dep=dep,
-                                              estimator=estimator,
-                                              display_name=name,
-                                              resample_cases=resample_cases,
-                                              significance=significance,
-                                              num_iter=num_iter,
-                                              preserve_cond_var=preserve_cond_var,
-                                              add_percentile_ci=add_percentile_ci,
-                                              add_basic_ci=add_basic_ci,
-                                              precision=6,
-                                              verbose=False)
+    (bca_ci_df,
+     percentile_ci_df,
+     basic_ci_df) = bootstrap.boot_conf_intervals(indep=indep,
+                                                  dep=dep,
+                                                  estimator=estimator,
+                                                  display_name=name,
+                                                  resample_cases=resample_cases,
+                                                  significance=significance,
+                                                  num_sims=num_iter,
+                                                  precision=6,
+                                                  verbose=False,
+                                                  seed=seed)
     return bca_ci_df, bic_model
 
 
@@ -427,7 +426,8 @@ def conf_int_all_months(dataset,
                         months=None,
                         verbose=True,
                         num_iter=_DEFAULT_NUM_ITER,
-                        significance=0.05):
+                        significance=0.05,
+                        seed=None):
 
     month_set = Month
     if months is not None:
@@ -477,7 +477,8 @@ def conf_int_all_months(dataset,
                                                   model_priors=model_priors,
                                                   month=month,
                                                   num_iter=num_iter,
-                                                  significance=significance)
+                                                  significance=significance,
+                                                  seed=seed)
 
         # change index name to col name for better latex
         ind_name = bca_ci_df.index.name
@@ -605,7 +606,8 @@ def table_bca_conf_int(months,
                        save=False,
                        verbose=False,
                        num_iter=_DEFAULT_NUM_ITER,
-                       significance=0.05):
+                       significance=0.05,
+                       seed=None):
 
     bca_ci_df_map, model_map = conf_int_all_months(dataset=dataset,
                                                    start_year=start_year,
@@ -614,7 +616,8 @@ def table_bca_conf_int(months,
                                                    months=months,
                                                    verbose=verbose,
                                                    num_iter=num_iter,
-                                                   significance=significance)
+                                                   significance=significance,
+                                                   seed=seed)
     dfs = []
     index_months = []
     index_list = []

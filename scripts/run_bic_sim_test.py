@@ -72,16 +72,25 @@ def main():
 
     parser.add_argument("outdir", help="output directory")
 
+    parser.add_argument("-n", "--num_sims", help="number of simulations")
+
     args = parser.parse_args()
 
     outdir = args.outdir
+    num_sims = args.num_sims
+
+    if num_sims is None:
+        num_sims = NUM_SIMS
+    else:
+        num_sims = int(num_sims)
 
     print()
     print("running segreg BIC monte carlo test")
     print("outdir: ", outdir)
+    print("num sims: ", num_sims)
     print()
 
-    bic_test_suite = BICTestSuite(num_sims=NUM_SIMS,
+    bic_test_suite = BICTestSuite(num_sims=num_sims,
                                   seed=SEED,
                                   num_end_to_skip=NUM_END_TO_SKIP,
                                   num_between_to_skip=NUM_BETWEEN_TO_SKIP)
