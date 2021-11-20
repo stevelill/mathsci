@@ -95,9 +95,6 @@ class QuadRegEstimator(Estimator):
     def has_restricted_params(self):
         pass
 
-    def estimation_func_val_at_estimate(self):
-        pass
-
     @property
     def num_params(self):
         return self._num_params
@@ -203,9 +200,6 @@ class CubicRegEstimator(Estimator):
         self._dep = dep[argsort_for_indep]
 
     def has_restricted_params(self):
-        pass
-
-    def estimation_func_val_at_estimate(self):
         pass
 
     @property
@@ -338,9 +332,6 @@ class ExponentialEstimator(Estimator):
         self._dep = dep[argsort_for_indep]
 
     def has_restricted_params(self):
-        pass
-
-    def estimation_func_val_at_estimate(self):
         pass
 
     @property
@@ -563,9 +554,6 @@ class GompertzEstimator(Estimator):
         self._dep = dep[argsort_for_indep]
 
     def has_restricted_params(self):
-        pass
-
-    def estimation_func_val_at_estimate(self):
         pass
 
     @property
