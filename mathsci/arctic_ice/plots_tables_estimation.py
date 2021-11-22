@@ -154,7 +154,7 @@ def estimation_df(indep,
         add_params(df, bic_model, func_est_params, indep)
 
     resid = estimator.residuals()
-    r_sq = estimator.r_squared()
+    r_sq = estimator.r_squared
 
     dw = sm.stats.stattools.durbin_watson(resid)
 
@@ -369,7 +369,7 @@ def estimation_results(ice_extent_df,
         print(month.name, "    ", bic_model.name)
 
         print()
-        print("R^2: ", estimator.r_squared())
+        print("R^2: ", estimator.r_squared)
         print()
 
     month_str = ""

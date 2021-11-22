@@ -99,6 +99,7 @@ class QuadRegEstimator(Estimator):
     def num_params(self):
         return self._num_params
 
+    @property
     def param_names(self):
         return ["b0", "b1", "b2", "sigma"]
 
@@ -206,6 +207,7 @@ class CubicRegEstimator(Estimator):
     def num_params(self):
         return self._num_params
 
+    @property
     def param_names(self):
         return ["b0", "b1", "b2", "b3", "sigma"]
 
@@ -338,6 +340,7 @@ class ExponentialEstimator(Estimator):
     def num_params(self):
         return self._num_params
 
+    @property
     def param_names(self):
         return ["a", "b", "c", "sigma"]
 
@@ -560,6 +563,7 @@ class GompertzEstimator(Estimator):
     def num_params(self):
         return self._num_params
 
+    @property
     def param_names(self):
         return ["a", "b", "c", "sigma"]
 

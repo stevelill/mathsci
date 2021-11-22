@@ -187,7 +187,7 @@ class MultiModelEstimator():
         num_data = len(self._indep)
 
         # TODO: use num_params property
-        num_params_arr = [len(estimator.param_names()) for estimator
+        num_params_arr = [len(estimator.param_names) for estimator
                           in self._estimators]
 
         loglik_arr = [estimator.loglikelihood() for estimator
@@ -336,7 +336,7 @@ class MultiModelEstimatorNEW():
         num_data = len(self._indep)
 
         # TODO: use num_params property
-        num_params_arr = [len(estimator.param_names()) for estimator
+        num_params_arr = [len(estimator.param_names) for estimator
                           in self._estimators]
 
         loglik_arr = [estimator.loglikelihood() for estimator
@@ -559,9 +559,9 @@ class BkptModelFitter():
         self._two_bkpt_resid_stddev = tbp_resid_stddev
 
         num_data = len(self._indep)
-        num_ols_params = len(self._ols_estimator.param_names())
-        num_one_bkpt_params = len(self._one_bkpt_estimator.param_names())
-        num_two_bkpt_params = len(self._two_bkpt_estimator.param_names())
+        num_ols_params = len(self._ols_estimator.param_names)
+        num_one_bkpt_params = len(self._one_bkpt_estimator.param_names)
+        num_two_bkpt_params = len(self._two_bkpt_estimator.param_names)
 
         ols_loglik = self._ols_estimator.loglikelihood()
         one_bkpt_loglik = self._one_bkpt_estimator.loglikelihood()
@@ -795,11 +795,11 @@ class BkptModelFitter():
 
     def to_dataframe(self):
         ols_cols = [Model.OLS.display + "_" + x
-                    for x in self._ols_estimator.param_names()]
+                    for x in self._ols_estimator.param_names]
         one_bkpt_cols = [Model.ONE_BKPT.display + "_" + x
-                         for x in self._one_bkpt_estimator.param_names()]
+                         for x in self._one_bkpt_estimator.param_names]
         two_bkpt_cols = [Model.TWO_BKPT.display + "_" + x
-                         for x in self._two_bkpt_estimator.param_names()]
+                         for x in self._two_bkpt_estimator.param_names]
 
         est_cols = ols_cols
         est_cols.extend(one_bkpt_cols)
