@@ -30,7 +30,7 @@ def _boot_zero_estim_data(estimator,
 
     fit_func = estimator.get_func()
     fit_fitted_indep = fit_func(indep)
-    fit_resid = estimator.residuals()
+    fit_resid = estimator.residuals
 
     fit_zero_time = prediction_methods.zero_ice(estimator=estimator,
                                                 indep=indep,

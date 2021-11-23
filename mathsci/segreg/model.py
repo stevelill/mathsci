@@ -128,18 +128,6 @@ class QuadRegEstimator(Estimator):
 
         return self._params
 
-    def residuals(self):
-        """
-        Depends on data being set and estimation performed.
-        """
-        if not self._is_estimated:
-            raise Exception(self._not_fit_message)
-
-        func = self.get_func()
-        self._residuals = self._dep - func(self._indep)
-
-        return self._residuals
-
     def rss(self):
         return self._rss
 
@@ -241,18 +229,6 @@ class CubicRegEstimator(Estimator):
         self._is_estimated = True
 
         return self._params
-
-    def residuals(self):
-        """
-        Depends on data being set and estimation performed.
-        """
-        if not self._is_estimated:
-            raise Exception(self._not_fit_message)
-
-        func = self.get_func()
-        self._residuals = self._dep - func(self._indep)
-
-        return self._residuals
 
     def rss(self):
         return self._rss
@@ -464,18 +440,6 @@ class ExponentialEstimator(Estimator):
 
         return self._params
 
-    def residuals(self):
-        """
-        Depends on data being set and estimation performed.
-        """
-        if not self._is_estimated:
-            raise Exception(self._not_fit_message)
-
-        func = self.get_func()
-        self._residuals = self._dep - func(self._indep)
-
-        return self._residuals
-
     def rss(self):
         return self._rss
 
@@ -685,18 +649,6 @@ class GompertzEstimator(Estimator):
         self._is_estimated = True
 
         return self._params
-
-    def residuals(self):
-        """
-        Depends on data being set and estimation performed.
-        """
-        if not self._is_estimated:
-            raise Exception(self._not_fit_message)
-
-        func = self.get_func()
-        self._residuals = self._dep - func(self._indep)
-
-        return self._residuals
 
     def rss(self):
         return self._rss

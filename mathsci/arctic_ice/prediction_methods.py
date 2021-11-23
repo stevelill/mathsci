@@ -537,7 +537,7 @@ def _predict_first_zero(indep,
 
     func = estimator.get_func()
 
-    resid = estimator.residuals()
+    resid = estimator.residuals
 
     if value_is_far(zero_time, indep[-1]) and convert_infinity:
 

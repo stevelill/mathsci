@@ -153,7 +153,7 @@ def estimation_df(indep,
     else:
         add_params(df, bic_model, func_est_params, indep)
 
-    resid = estimator.residuals()
+    resid = estimator.residuals
     r_sq = estimator.r_squared
 
     dw = sm.stats.stattools.durbin_watson(resid)
@@ -360,7 +360,7 @@ def estimation_results(ice_extent_df,
 
     resid_stddev = est_params[-1]
 
-    resid = estimator.residuals()
+    resid = estimator.residuals
     resid_df = pd.DataFrame({"resid": resid}, index=indep)
 
     if verbose:
