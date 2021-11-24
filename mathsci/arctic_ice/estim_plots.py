@@ -65,7 +65,7 @@ def plot_fit(indep,
                                                                 seed=seed,
                                                                 level=zero_ice_level)
 
-        models_func[model] = estimator.get_func()
+        models_func[model] = estimator.model_function
         models_bkpt[model] = None
         models_first_zero_ice[model] = first_zero
         models_zero_ice[model] = zero_ice_time

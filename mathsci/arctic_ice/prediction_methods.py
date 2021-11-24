@@ -535,7 +535,7 @@ def _predict_first_zero(indep,
                          dep=dep,
                          level=level)
 
-    func = estimator.get_func()
+    func = estimator.model_function
 
     resid = estimator.residuals
 

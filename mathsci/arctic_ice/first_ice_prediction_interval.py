@@ -28,7 +28,7 @@ def _boot_zero_estim_data(estimator,
 
     estimator.fit(indep, dep)
 
-    fit_func = estimator.get_func()
+    fit_func = estimator.model_function
     fit_fitted_indep = fit_func(indep)
     fit_resid = estimator.residuals
 
