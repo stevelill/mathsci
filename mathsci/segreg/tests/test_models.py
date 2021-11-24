@@ -214,9 +214,9 @@ class TestModels(unittest.TestCase):
         num_one_bkpt_params = 4 + 1
         num_two_bkpt_params = 6 + 1
 
-        ols_loglik = ols_estimator.loglikelihood()
-        one_bkpt_loglik = one_bkpt_estimator.loglikelihood()
-        two_bkpt_loglik = two_bkpt_estimator.loglikelihood()
+        ols_loglik = ols_estimator.loglikelihood
+        one_bkpt_loglik = one_bkpt_estimator.loglikelihood
+        two_bkpt_loglik = two_bkpt_estimator.loglikelihood
 
         ols_bic = stats_util.bic(num_ols_params, ols_loglik, num_data)
         one_bkpt_bic = stats_util.bic(num_one_bkpt_params,
@@ -317,9 +317,9 @@ class TestModels(unittest.TestCase):
         num_one_bkpt_params = 4 + 1
         num_two_bkpt_params = 6 + 1
 
-        ols_loglik = ols_estimator.loglikelihood()
-        one_bkpt_loglik = one_bkpt_estimator.loglikelihood()
-        two_bkpt_loglik = two_bkpt_estimator.loglikelihood()
+        ols_loglik = ols_estimator.loglikelihood
+        one_bkpt_loglik = one_bkpt_estimator.loglikelihood
+        two_bkpt_loglik = two_bkpt_estimator.loglikelihood
 
         ols_bic = stats_util.bic(num_ols_params, ols_loglik, num_data)
         one_bkpt_bic = stats_util.bic(num_one_bkpt_params,

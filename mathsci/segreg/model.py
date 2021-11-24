@@ -103,6 +103,10 @@ class QuadRegEstimator(Estimator):
     def param_names(self):
         return ["b0", "b1", "b2", "sigma"]
 
+    @property
+    def estimated_params_indices(self):
+        return self._estimated_params_indices
+
     def fit(self, indep, dep):
         self._set_data(indep, dep)
 
@@ -148,14 +152,6 @@ class QuadRegEstimator(Estimator):
 
         return ols_func
 
-    # use stats_util instead
-#     def bic(self):
-#         num_data = len(self._dep)
-#         mybic = stats_util.bic(self._num_params,
-#                                self.loglikelihood(),
-#                                num_data)
-#         return mybic
-
 
 class CubicRegEstimator(Estimator):
 
@@ -171,6 +167,10 @@ class CubicRegEstimator(Estimator):
         self._dep = None
         self._params = None
         self._is_estimated = False
+
+        self._fixed_params_indices = []
+        self._estimated_params_indices = np.setdiff1d(np.arange(self._num_params),
+                                                      self._fixed_params_indices)
 
         self._not_fit_message = "Need to call 'fit()' first"
 
@@ -198,6 +198,10 @@ class CubicRegEstimator(Estimator):
     @property
     def param_names(self):
         return ["b0", "b1", "b2", "b3", "sigma"]
+
+    @property
+    def estimated_params_indices(self):
+        return self._estimated_params_indices
 
     def fit(self, indep, dep):
         self._set_data(indep, dep)
@@ -250,14 +254,6 @@ class CubicRegEstimator(Estimator):
             return b0 + b1 * x + b2 * x * x + b3 * x * x * x
 
         return ols_func
-
-    # use stats_util instead
-#     def bic(self):
-#         num_data = len(self._dep)
-#         mybic = stats_util.bic(self._num_params,
-#                                self.loglikelihood(),
-#                                num_data)
-#         return mybic
 
 
 class ExponentialEstimator(Estimator):
@@ -319,6 +315,10 @@ class ExponentialEstimator(Estimator):
     @property
     def param_names(self):
         return ["a", "b", "c", "sigma"]
+
+    @property
+    def estimated_params_indices(self):
+        return self._estimated_params_indices
 
     def fit(self, indep, dep):
         """
@@ -530,6 +530,10 @@ class GompertzEstimator(Estimator):
     @property
     def param_names(self):
         return ["a", "b", "c", "sigma"]
+
+    @property
+    def estimated_params_indices(self):
+        return self._estimated_params_indices
 
     def fit(self, indep, dep):
         """

@@ -67,7 +67,7 @@ def create_fit_map(indep,
 
         num_params = estimator.num_params
         mle = estimator.fit(indep, dep)
-        loglik = estimator.loglikelihood()
+        loglik = estimator.loglikelihood
 
         # todo: get func, then apply to 30yrs ahead to predict
         func = estimator.get_func_for_params(mle)
@@ -190,7 +190,7 @@ class MultiModelEstimator():
         num_params_arr = [len(estimator.param_names) for estimator
                           in self._estimators]
 
-        loglik_arr = [estimator.loglikelihood() for estimator
+        loglik_arr = [estimator.loglikelihood for estimator
                       in self._estimators]
 
         bic_arr = [self._bic_calculator.bic(num_params=num_params,
@@ -339,7 +339,7 @@ class MultiModelEstimatorNEW():
         num_params_arr = [len(estimator.param_names) for estimator
                           in self._estimators]
 
-        loglik_arr = [estimator.loglikelihood() for estimator
+        loglik_arr = [estimator.loglikelihood for estimator
                       in self._estimators]
 
         bic_arr = [bic_calculator.bic(num_params=num_params,
@@ -563,9 +563,9 @@ class BkptModelFitter():
         num_one_bkpt_params = len(self._one_bkpt_estimator.param_names)
         num_two_bkpt_params = len(self._two_bkpt_estimator.param_names)
 
-        ols_loglik = self._ols_estimator.loglikelihood()
-        one_bkpt_loglik = self._one_bkpt_estimator.loglikelihood()
-        two_bkpt_loglik = self._two_bkpt_estimator.loglikelihood()
+        ols_loglik = self._ols_estimator.loglikelihood
+        one_bkpt_loglik = self._one_bkpt_estimator.loglikelihood
+        two_bkpt_loglik = self._two_bkpt_estimator.loglikelihood
 
         # NOTE: the primary "bic" used here depends on calculator setting
         self._ols_bic = self._bic_calculator.bic(num_ols_params,

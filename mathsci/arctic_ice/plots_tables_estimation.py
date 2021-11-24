@@ -519,7 +519,7 @@ def info_criteria(indep,
                                     num_between_to_skip=NUM_BETWEEN_TO_SKIP)
         estimator.fit(indep, dep)
 
-        loglikelihood = estimator.loglikelihood()
+        loglikelihood = estimator.loglikelihood
         num_params = estimator.num_params
 
         bic = bic_calc_to_use.bic(num_params=num_params,
