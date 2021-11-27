@@ -92,6 +92,7 @@ class QuadRegEstimator(Estimator):
         self._indep = indep[argsort_for_indep]
         self._dep = dep[argsort_for_indep]
 
+    @property
     def has_restricted_params(self):
         pass
 
@@ -188,6 +189,7 @@ class CubicRegEstimator(Estimator):
         self._indep = indep[argsort_for_indep]
         self._dep = dep[argsort_for_indep]
 
+    @property
     def has_restricted_params(self):
         pass
 
@@ -305,6 +307,7 @@ class ExponentialEstimator(Estimator):
         self._indep = indep[argsort_for_indep]
         self._dep = dep[argsort_for_indep]
 
+    @property
     def has_restricted_params(self):
         pass
 
@@ -520,6 +523,7 @@ class GompertzEstimator(Estimator):
         self._indep = indep[argsort_for_indep]
         self._dep = dep[argsort_for_indep]
 
+    @property
     def has_restricted_params(self):
         pass
 
