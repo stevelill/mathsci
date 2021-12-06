@@ -11,7 +11,7 @@ from matplotlib.ticker import MaxNLocator
 from mathsci.arctic_ice import prediction_methods, dataaccess
 from mathsci.arctic_ice.arctic_ice_constants import FYZI
 from mathsci.segreg.model import Model
-from segreg.analysis import plot_model
+from segreg.analysis import plot_models
 
 
 def plot_fit(indep,
@@ -116,20 +116,20 @@ def plot_fit(indep,
             domain_end = domain_end_arr[i]
             extra_pts.append(domain_end)
 
-    ax = plot_model(func_arr=func_arr,
-                    indep=indep,
-                    dep=dep,
-                    domain_begin_arr=domain_begin_arr,
-                    domain_end_arr=domain_end_arr,
-                    title=title,
-                    xlabel=xlabel,
-                    ylabel=ylabel,
-                    extra_pts_arr=extra_pts_arr,
-                    mark_extra_pts=True,
-                    scatter_size=scatter_size,
-                    scatter_color=scatter_color,
-                    marker=marker,
-                    ax=ax)
+    ax = plot_models(func_arr=func_arr,
+                     indep=indep,
+                     dep=dep,
+                     domain_begin_arr=domain_begin_arr,
+                     domain_end_arr=domain_end_arr,
+                     title=title,
+                     xlabel=xlabel,
+                     ylabel=ylabel,
+                     extra_pts_arr=extra_pts_arr,
+                     mark_extra_pts=True,
+                     scatter_size=scatter_size,
+                     scatter_color=scatter_color,
+                     marker=marker,
+                     ax=ax)
 
     if yaxis_num_ticks is not None:
         ax.yaxis.set_major_locator(plt.MaxNLocator(nbins=yaxis_num_ticks,
