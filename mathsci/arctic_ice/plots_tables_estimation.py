@@ -42,6 +42,7 @@ text_util.format_output(4)
 
 _DEFAULT_NUM_ITER = 1000000
 
+
 outdir = PLOTS_TABLES_ROOTDIR
 
 ################################################################################
@@ -272,6 +273,7 @@ def estimations_all_months(dataset,
                            model_priors=model_priors,
                            ice_extent_df=ice_extent_df,
                            only_ols_1bkpt=only_ols_1bkpt)
+
         dfs.append(df)
 
     comb = pd.concat(dfs, join="inner", axis=0)
@@ -550,8 +552,8 @@ def info_criteria(indep,
 ################################################################################
 
 
-def table_estim_sii_all_months(save=False):
-    month_to_priors = {Month.SEP: [0, 1, 0]}
+def table_estim_sii_all_months(save=False, month_to_priors=None):
+
     df = estimations_all_months(dataset=Dataset.NSIDC,
                                 start_year=None,
                                 end_year=None,

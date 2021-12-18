@@ -28,7 +28,8 @@ from mathsci.arctic_ice.arctic_ice_constants import (
     NA_REP,
     FYZI,
     ROLLING_BLEND_DIR,
-    ROLLING_SIBT_DIR
+    ROLLING_SIBT_DIR,
+    SII_MONTH_TO_PRIORS
 )
 from mathsci.constants import Month, Dataset
 from mathsci.segreg.model import Model
@@ -170,83 +171,66 @@ def predictions_all_months(dataset,
 
     for month in month_set:
 
-        if dataset == Dataset.NSIDC:
+        try:
             (ice_extent_df,
              name,
              xlabel,
              ylabel,
              indep,
-             dep) = dataaccess.arctic_ice_extent_nsidc_monthly_avg(
-                month=month,
-                start_year=start_year,
-                end_year=end_year,
-                verbose=False)
+             dep) = data_util.fetch_month(dataset=dataset,
+                                          month=month,
+                                          start_year=start_year,
+                                          end_year=end_year)
 
-        elif dataset == Dataset.BLEND:
-            (ice_extent_df,
-             name,
-             xlabel,
-             ylabel,
-             indep,
-             dep) = dataaccess.arctic_ice_extent_blend(
-                month=month,
-                start_year=start_year,
-                end_year=end_year,
-                verbose=False)
-        elif dataset == Dataset.SIBT1850:
-            (ice_extent_df,
-             name,
-             xlabel,
-             ylabel,
-             indep,
-             dep) = dataaccess.arctic_ice_extent_sibt1850_midmonth(
-                month=month,
-                start_year=start_year,
-                end_year=end_year,
-                verbose=False)
+            # remove month from name
+            tokens = name.split(" ")
+            tokens.pop(3)
+            name = " ".join(tokens)
 
-        # remove month from name
-        tokens = name.split(" ")
-        tokens.pop(3)
-        name = " ".join(tokens)
+            data_name = name.split(" ")[-2]
 
-        data_name = name.split(" ")[-2]
+            model_priors = None
 
-        model_priors = None
+            if month_to_priors is not None:
 
-        if month_to_priors is not None:
+                model_priors = month_to_priors.get(month)
+                if model_priors is not None and verbose:
+                    print()
+                    print(month.name + " model_priors: ", model_priors)
+                    print()
 
-            model_priors = month_to_priors.get(month)
-            if model_priors is not None and verbose:
-                print()
-                print(month.name + " model_priors: ", model_priors)
-                print()
+            if models is not None:
+                predict_df = models_compute_predict_df(ice_extent_df=ice_extent_df,
+                                                       indep=indep,
+                                                       dep=dep,
+                                                       models=models,
+                                                       data_name=data_name,
+                                                       model_priors=model_priors,
+                                                       skip_interval=skip_interval,
+                                                       format_dates=format_dates)
+            else:
+                predict_df = compute_predict_df(ice_extent_df=ice_extent_df,
+                                                indep=indep,
+                                                dep=dep,
+                                                data_name=data_name,
+                                                model_priors=model_priors,
+                                                skip_interval=skip_interval,
+                                                sub_bic=sub_bic,
+                                                format_dates=format_dates)
 
-        if models is not None:
-            predict_df = models_compute_predict_df(ice_extent_df=ice_extent_df,
-                                                   indep=indep,
-                                                   dep=dep,
-                                                   models=models,
-                                                   data_name=data_name,
-                                                   model_priors=model_priors,
-                                                   skip_interval=skip_interval,
-                                                   format_dates=format_dates)
-        else:
-            predict_df = compute_predict_df(ice_extent_df=ice_extent_df,
-                                            indep=indep,
-                                            dep=dep,
-                                            data_name=data_name,
-                                            model_priors=model_priors,
-                                            skip_interval=skip_interval,
-                                            sub_bic=sub_bic,
-                                            format_dates=format_dates)
+            dfs.append(predict_df)
 
-        dfs.append(predict_df)
-
-#         except:
-#             print("cannot fetch for: ", month, " ", end_year)
-#             dfs.append(pd.DataFrame({"predict" : np.nan,
-#                                      "bic_model_wt" : np.nan}, index=[""]))
+        except:
+            print("cannot fetch for: ", month, " ", end_year)
+            dfs.append(pd.DataFrame({"predict": np.nan,
+                                     "Left": np.nan,
+                                     "Predict": np.nan,
+                                     "Right": np.nan,
+                                     "BIC Model": None,
+                                     "Data Start": None,
+                                     "Data End": None,
+                                     "Data Name": None,
+                                     "BIC Model Wt": np.nan}, index=[""]))
 
     comb = pd.concat(dfs, join="inner", axis=0)
     comb.index = [x.name for x in month_set]
@@ -261,12 +245,15 @@ def predictions_all_months(dataset,
 
 def plot_predictions(predict_df,
                      name,
-                     to_index=18,
+                     to_index=None,
                      ax=None,
                      plot_interval=False,
                      title_extra="",
                      skip_title=False,
                      formatted_dates=True):
+
+    if to_index is None:
+        to_index = 18
 
     double = gu.extend_dataframe(predict_df,
                                  to_index=to_index)
@@ -310,8 +297,11 @@ def plot_predictions(predict_df,
 
 
 def plot_predictions2(predict_df,
-                      to_index=18,
+                      to_index=None,
                       ax=None):
+
+    if to_index is None:
+        to_index = 18
 
     double = gu.extend_dataframe(predict_df,
                                  to_index=to_index)
@@ -349,7 +339,7 @@ def plot_series(df, month, markers=True, ax=None, legend=True):
     return ax
 
 
-def plot_years(dfs, formatted_dates=True):
+def plot_years(dfs, formatted_dates=True, extended=False):
     """
     Same dataset, but different end years.
     """
@@ -362,18 +352,25 @@ def plot_years(dfs, formatted_dates=True):
 
     fig, ax = plt.subplots()
 
+    if extended:
+        to_index = None
+    else:
+        to_index = dfs[0].shape[0]
+
     interval_ind = 0
     plot_predictions(dfs[interval_ind],
                      name=dataset_name,
                      plot_interval=True,
                      ax=ax,
-                     title_extra="for " + str(end_years[interval_ind]))
+                     title_extra="for " + str(end_years[interval_ind]),
+                     to_index=to_index)
 
     for df in dfs[1:]:
         plot_predictions(df,
                          name=dataset_name,
                          ax=ax,
-                         skip_title=True)
+                         skip_title=True,
+                         to_index=to_index)
 
     ax.yaxis.set_major_locator(MaxNLocator(15))
 
@@ -420,7 +417,7 @@ def predictions_for_month(month, models=None, verbose=False):
     month_to_priors = None
     ###########################################################
     dataset = Dataset.BLEND
-    end_years = np.arange(start_year, 2021)
+    end_years = np.arange(start_year, 2022)
 
     blend_dfs = []
     for end_year in end_years:
@@ -452,18 +449,16 @@ def predictions_for_month(month, models=None, verbose=False):
         sibt_dfs.append(pred)
     ###########################################################
     dataset = Dataset.NSIDC
-    end_years = np.arange(2010, 2021)
+    end_years = np.arange(2010, 2022)
 
     nsidc_dfs = []
     for end_year in end_years:
         if end_year % 10 == 0 and verbose:
             print(end_year)
         try:
-            # if we run without priors for AUG and OCT, we get 1bkpt; so we put
-            # 1bkpt for SEP for consistency
-            if end_year >= 2018 and month == Month.SEP:
+            if end_year >= 2018:
                 if models is None:
-                    month_to_priors = {month: [0.0, 1.0, 0.0]}
+                    month_to_priors = SII_MONTH_TO_PRIORS
 
             pred = predictions_all_months(dataset=dataset,
                                           end_year=end_year,
@@ -489,14 +484,17 @@ def create_predict_df(dfs, month):
     for df in dfs:
         name = df.loc[:, "Data Name"].values[0]
 
-        start_year = df.loc[:, "Data Start"].values[0]
-        # crud way to get year here; numpy date
-        start_year = str(start_year).split("-")[0]
+        # if name is None, it means there was not data for this df
+        if name is not None:
 
-        name += "_" + start_year
+            start_year = df.loc[:, "Data Start"].values[0]
+            # crud way to get year here; numpy date
+            start_year = str(start_year).split("-")[0]
 
-        vals.append(df.loc[month, PREDICT_NAME])
-        index.append(df.loc[month, "Data End"])
+            name += "_" + start_year
+
+            vals.append(df.loc[month, PREDICT_NAME])
+            index.append(df.loc[month, "Data End"])
 
     month_df = pd.DataFrame({name: vals}, index=index)
     return month_df
@@ -543,7 +541,7 @@ def predict_mean(sourcedir_root, start_year=None, end_year=None):
     return predictions_df
 
 
-def table_for_year(sourcedir_root, year):
+def table_for_year(sourcedir_root, year, months=None):
 
     cols = ["left",
             "predict",
@@ -554,9 +552,14 @@ def table_for_year(sourcedir_root, year):
             "data_end",
             "data_name"]
 
+    if months is None:
+        months_to_use = Month
+    else:
+        months_to_use = months
+
     index = []
     rows = []
-    for month in Month:
+    for month in months_to_use:
         sourcedir = os.path.join(sourcedir_root, month.name)
         predict_filename = os.path.join(sourcedir, "bic_predict.csv")
         meta_filename = os.path.join(sourcedir, "meta.csv")
@@ -769,6 +772,21 @@ def plot_rolling_blend(month, show_bic_choice=False, outdir=None):
     one_bkpt_predict_df = fetch_predictions(one_bkpt_predict_filename)
     two_bkpt_predict_df = fetch_predictions(two_bkpt_predict_filename)
 
+    maxval = max(one_bkpt_predict_df.predict.max(),
+                 two_bkpt_predict_df.predict.max())
+
+    if month in [Month.AUG, Month.SEP, Month.OCT]:
+        maxval = min(maxval, 2100.0)
+
+    bic_capped_df = bic_predict_df.loc[:, ["predict"]]
+    bic_capped_df[bic_capped_df > maxval] = np.nan
+    ols_capped_df = ols_predict_df.loc[:, ["predict"]]
+    ols_capped_df[ols_capped_df > maxval] = np.nan
+    one_bkpt_capped_df = one_bkpt_predict_df.loc[:, ["predict"]]
+    one_bkpt_capped_df[one_bkpt_capped_df > maxval] = np.nan
+    two_bkpt_capped_df = two_bkpt_predict_df.loc[:, ["predict"]]
+    two_bkpt_capped_df[two_bkpt_capped_df > maxval] = np.nan
+
     if show_bic_choice:
         f, (ax1, ax2, ax3) = plt.subplots(3, 1,
                                           sharex=True,
@@ -786,7 +804,7 @@ def plot_rolling_blend(month, show_bic_choice=False, outdir=None):
                  "    Rolling Start Dates    " + dataset +
                  "    End Year: " + str(end_year))  # , y=0.93)
 
-    plot_series(bic_predict_df.loc[:, ["predict"]],
+    plot_series(bic_capped_df.loc[:, ["predict"]],
                 month=month,
                 ax=ax1,
                 legend=False)
@@ -810,20 +828,6 @@ def plot_rolling_blend(month, show_bic_choice=False, outdir=None):
 
     ############################
 
-    maxval = max(one_bkpt_predict_df.predict.max(),
-                 two_bkpt_predict_df.predict.max())
-
-    ols_capped = []
-    for val in ols_predict_df.predict.values:
-        if val > maxval:
-            result = np.nan
-        else:
-            result = val
-        ols_capped.append(result)
-
-    ols_capped_df = pd.DataFrame({"predict": ols_capped},
-                                 index=ols_predict_df.index)
-
     plot_series(ols_capped_df.loc[:, ["predict"]],
                 month=month,
                 ax=ax3,
@@ -831,14 +835,14 @@ def plot_rolling_blend(month, show_bic_choice=False, outdir=None):
 
     ############################
 
-    plot_series(one_bkpt_predict_df.loc[:, ["predict"]],
+    plot_series(one_bkpt_capped_df.loc[:, ["predict"]],
                 month=month,
                 ax=ax3,
                 legend=True)
 
     ############################
 
-    plot_series(two_bkpt_predict_df.loc[:, ["predict"]],
+    plot_series(two_bkpt_capped_df.loc[:, ["predict"]],
                 month=month,
                 ax=ax3,
                 legend=True)
@@ -856,10 +860,10 @@ def plot_rolling_blend(month, show_bic_choice=False, outdir=None):
             ax3.plot(currdate, ols_capped_df.loc[currdate].predict,
                      'o', markersize=markersize, color=color, marker=marker)
         elif model == Model.ONE_BKPT:
-            ax3.plot(currdate, one_bkpt_predict_df.loc[currdate].predict,
+            ax3.plot(currdate, one_bkpt_capped_df.loc[currdate].predict,
                      'o', markersize=markersize, color=color, marker=marker)
         elif model == Model.TWO_BKPT:
-            ax3.plot(currdate, two_bkpt_predict_df.loc[currdate].predict,
+            ax3.plot(currdate, two_bkpt_capped_df.loc[currdate].predict,
                      'o', markersize=markersize, color=color, marker=marker)
 
     ax3.legend([Model.OLS.display,
@@ -915,21 +919,29 @@ def fyzi(indep, dep, models):
 ################################################################################
 
 
-def plot_sii_end_years(save=False):
+def plot_sii_end_years(save=False, months=None):
     dataset = Dataset.NSIDC
-    end_years = [2017, 2018, 2019, 2020]
+    end_years = [2017, 2018, 2019, 2020, 2021]
 
-    month_to_priors = {Month.SEP: [0.0, 1.0, 0.0]}
+#    month_to_priors = {Month.AUG: [0.0, 1.0, 0.0], Month.SEP: [0.0, 1.0, 0.0]}
+
+    month_to_priors = SII_MONTH_TO_PRIORS
 
     nsidc_dfs = []
     for end_year in end_years:
         print(end_year)
+
         pred = predictions_all_months(dataset=dataset,
                                       end_year=end_year,
                                       month_to_priors=month_to_priors,
-                                      format_dates=True)
+                                      format_dates=True,
+                                      months=months)
+
         nsidc_dfs.append(pred)
-    plot_years(nsidc_dfs)
+
+    # for full year, do wrap around extended plot
+    extended = (months is None)
+    plot_years(nsidc_dfs, extended=extended)
 
     if save:
         plt.savefig(os.path.join(IMAGES_OUTDIR,
@@ -937,9 +949,11 @@ def plot_sii_end_years(save=False):
                     format="pdf")
 
 
-def table_sii_predict(save=False):
+def table_sii_predict(save=False, months=None):
     dataset = Dataset.NSIDC
-    nsidc_pred_orig = predictions_all_months(dataset=dataset, format_dates=True)
+    nsidc_pred_orig = predictions_all_months(dataset=dataset,
+                                             format_dates=True,
+                                             months=months)
 
     nsidc_pred_orig.iloc[:, 0:3] = nsidc_pred_orig.iloc[:, 0:3].apply(np.floor)
 
@@ -954,18 +968,22 @@ def table_sii_predict(save=False):
         nsidc_pred_orig.to_latex(out)
 
 
-def _sii_sep_mod_df():
+def _sii_sep_mod_df(months=None):
     dataset = Dataset.NSIDC
-    month = Month.SEP
-    month_to_priors = {month: [0.0, 1.0, 0.0]}
+
+#    month_to_priors = {Month.AUG: [0.0, 1.0, 0.0], Month.SEP: [0.0, 1.0, 0.0]}
+
+    month_to_priors = SII_MONTH_TO_PRIORS
 
     sub_bic = True
 
     nsidc_pred_sep_1bkpt = predictions_all_months(dataset=dataset,
                                                   month_to_priors=month_to_priors,
                                                   sub_bic=sub_bic,
-                                                  format_dates=True)
-    nsidc_pred_sep_1bkpt.loc[month.name, "BIC Model Wt"] = NA_REP
+                                                  format_dates=True,
+                                                  months=months)
+    for month in month_to_priors.keys():
+        nsidc_pred_sep_1bkpt.loc[month.name, "BIC Model Wt"] = NA_REP
 
     # for presentation -- use the year the forecast lands in
     nsidc_pred_sep_1bkpt.iloc[:, 0:3] = nsidc_pred_sep_1bkpt.iloc[:, 0:3].apply(np.floor)
@@ -973,16 +991,22 @@ def _sii_sep_mod_df():
     return nsidc_pred_sep_1bkpt
 
 
-def plot_and_table_sii_predict_mod_sep(save=False):
+def plot_and_table_sii_predict_mod_sep(save=False, months=None):
 
-    nsidc_pred_sep_1bkpt = _sii_sep_mod_df()
+    nsidc_pred_sep_1bkpt = _sii_sep_mod_df(months=months)
 
     dataset_name = nsidc_pred_sep_1bkpt.loc[:, "Data Name"][0]
+
+    if months is None:
+        to_index = None
+    else:
+        to_index = len(months)
 
     fig, ax = plt.subplots()
     plot_predictions(nsidc_pred_sep_1bkpt,
                      name=dataset_name,
                      plot_interval=True,
+                     to_index=to_index,
                      ax=ax)
     ax.get_legend().remove()
 
@@ -1099,7 +1123,7 @@ def table_sibt_blend_ranges(save=False):
     display(comb)
 
 
-def plot_fyzi_and_ranges_table_sii_blend(save=False):
+def plot_fyzi_and_ranges_table_sii_blend(save=False, months=None):
     year = 1850
 
     blend_1850_df = predictions(ROLLING_BLEND_DIR, year)
@@ -1112,7 +1136,18 @@ def plot_fyzi_and_ranges_table_sii_blend(save=False):
 
     blend_cutoff_df = blend_cutoff_df.loc[:, ["predict"]]
 
-    nsidc_pred_sep_1bkpt = _sii_sep_mod_df()
+    if months is None:
+        to_index = None
+        months = Month
+    else:
+        to_index = len(months)
+
+    # restrict to months
+    months_str = [x.name for x in months]
+    blend_1850_df = blend_1850_df.loc[months_str, :]
+    blend_cutoff_df = blend_cutoff_df.loc[months_str, :]
+
+    nsidc_pred_sep_1bkpt = _sii_sep_mod_df(months=months)
 
     nsidc_pred = nsidc_pred_sep_1bkpt.loc[:, [PREDICT_NAME]]
     nsidc_pred_name = Dataset.NSIDC.name + "_" + str(1979)
@@ -1143,7 +1178,8 @@ def plot_fyzi_and_ranges_table_sii_blend(save=False):
         plot_predictions(df,
                          name=None,
                          ax=ax,
-                         skip_title=True)
+                         skip_title=True,
+                         to_index=to_index)
 
     ax.yaxis.set_major_locator(MaxNLocator(15))
     plt.legend(names)
@@ -1176,8 +1212,8 @@ def plot_fyzi_and_ranges_table_sii_blend(save=False):
         comb.to_latex(out)
 
 
-def _create_predict_table(source_dir, year, show=True):
-    predictions_df = table_for_year(source_dir, year)
+def _create_predict_table(source_dir, year, show=True, months=None):
+    predictions_df = table_for_year(source_dir, year, months=months)
     predictions_df.iloc[:, 0:3] = predictions_df.iloc[:, 0:3].apply(np.floor)
 
     if show:
@@ -1186,30 +1222,38 @@ def _create_predict_table(source_dir, year, show=True):
     return predictions_df
 
 
-def tables_predict_from_precompute(save=False):
+def tables_predict_from_precompute(save=False, months=None):
 
     formatter = myformatter(precision=0)
 
-    pred_df = _create_predict_table(source_dir=ROLLING_SIBT_DIR, year=1850)
+    pred_df = _create_predict_table(source_dir=ROLLING_SIBT_DIR,
+                                    year=1850,
+                                    months=months)
     pred_df.iloc[:, 0:3] = pred_df.iloc[:, 0:3].apply(formatter)
 
     if save:
         pred_df.to_latex(os.path.join(TABLES_OUTDIR,
                                       "predict_all_months_sibt_1850.tex"))
 
-    pred_df = _create_predict_table(source_dir=ROLLING_SIBT_DIR, year=1957)
+    pred_df = _create_predict_table(source_dir=ROLLING_SIBT_DIR,
+                                    year=1957,
+                                    months=months)
     pred_df.iloc[:, 0:3] = pred_df.iloc[:, 0:3].apply(formatter)
     if save:
         pred_df.to_latex(os.path.join(TABLES_OUTDIR,
                                       "predict_all_months_sibt_1957.tex"))
 
-    pred_df = _create_predict_table(source_dir=ROLLING_BLEND_DIR, year=1850)
+    pred_df = _create_predict_table(source_dir=ROLLING_BLEND_DIR,
+                                    year=1850,
+                                    months=months)
     pred_df.iloc[:, 0:3] = pred_df.iloc[:, 0:3].apply(formatter)
     if save:
         pred_df.to_latex(os.path.join(TABLES_OUTDIR,
                                       "predict_all_months_blend_1850.tex"))
 
-    pred_df = _create_predict_table(source_dir=ROLLING_BLEND_DIR, year=1957)
+    pred_df = _create_predict_table(source_dir=ROLLING_BLEND_DIR,
+                                    year=1957,
+                                    months=months)
     pred_df.iloc[:, 0:3] = pred_df.iloc[:, 0:3].apply(formatter)
     if save:
         pred_df.to_latex(os.path.join(TABLES_OUTDIR,
@@ -1232,6 +1276,8 @@ def plot_mean_compare_halves_blend(save=False):
 
     colname = "mean"
 
+#    colname = "median"
+
     comb = pd.concat([pred_blend_df_lhs.loc[:, [colname]],
                       pred_blend_df_rhs.loc[:, [colname]]],
                      join="inner", axis=1)
@@ -1250,6 +1296,48 @@ def plot_mean_compare_halves_blend(save=False):
     plt.legend(loc="lower right")
 
     out = os.path.join(IMAGES_OUTDIR, "predict_all_months_blend_mean_1957.pdf")
+    if save:
+        plt.savefig(out, format="pdf")
+
+
+def plot_mean_compare_halves_sibt(save=False):
+    source = ROLLING_SIBT_DIR
+
+    cutoff_year = 1957
+    (pred_blend_df_lhs,
+     source_start_lhs,
+     source_end_lhs,
+     dataset) = pred_by_month(source, end_year=cutoff_year)
+
+    (pred_blend_df_rhs,
+     source_start_rhs,
+     source_end_rhs,
+     dataset) = pred_by_month(source, start_year=cutoff_year)
+
+    colname = "mean"
+
+#    colname = "median"
+
+    comb = pd.concat([pred_blend_df_lhs.loc[:, [colname]],
+                      pred_blend_df_rhs.loc[:, [colname]]],
+                     join="inner", axis=1)
+    comb.columns = [create_colname(colname, source_start_lhs, source_end_lhs),
+                    create_colname(colname, source_start_rhs, source_end_rhs)]
+
+    plot_predictions2(comb)
+
+    print(comb)
+
+    title = ("Mean of Rolling " + FYZI + " Predictions    "
+             + dataset +
+             "    Extent: " + str(int(ZERO_ICE_LEVEL)))
+
+    plt.title(title)
+    plt.ylabel(FYZI)
+
+    plt.legend(loc="lower right")
+
+    out = os.path.join(IMAGES_OUTDIR, "predict_all_months_sibt_mean_1957.pdf")
     if save:
         plt.savefig(out, format="pdf")
 

@@ -7,6 +7,7 @@ Manages production of all plots and tables.
 
 import argparse
 
+from mathsci.constants import Month
 from mathsci.arctic_ice import plots_tables_manager as ptm
 
 
@@ -25,7 +26,9 @@ def main():
     print("Creating plots and tables for Arctic Sea Ice Paper")
     print()
 
-    ptm.create_all_plots_tables(save=True)
+    months = [Month.AUG, Month.SEP, Month.OCT]
+
+    ptm.create_all_plots_tables(save=True, months=months)
 
 
 if __name__ == '__main__':
